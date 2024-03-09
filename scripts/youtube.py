@@ -9,7 +9,6 @@ load_dotenv()
 
 API_KEY = os.getenv('GOOGLE_API_KEY')
 
-         
 async def fetch_channel_id(channel_name): # Thank u chatgpt
    url = "https://www.googleapis.com/youtube/v3/search"
    params = {
