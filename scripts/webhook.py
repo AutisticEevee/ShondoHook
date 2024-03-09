@@ -8,9 +8,8 @@ async def send_hook(message):
     async with httpx.AsyncClient() as session:
         for url in webhook_urls:
             try:
-                payload = {'content': message}
                 print(message)
-                response = await session.post(url,  json=payload, timeout=10)
+                response = await session.post(url,  json={'content': message}, timeout=10)
                 if response.status_code == 204:
                     print(f'Posted to: {url}')
                 else:
@@ -18,3 +17,5 @@ async def send_hook(message):
                 await asyncio.sleep(3)
             except Exception as e:
                 print(f'Critical error sending to webhook: {url} : {str(e)}')
+                
+asyncio.run(send_hook('meow'))
