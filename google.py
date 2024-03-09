@@ -3,7 +3,7 @@ import asyncio
 import random
 import os
 from dotenv import load_dotenv
-import json
+import re
 
 load_dotenv()
 
@@ -48,7 +48,14 @@ async def fetch_videos(channel_id, maxResults=20, order='date'):
          return data
       else:
          print(f'Error fetching videos Status Code:{response.status_code}')
-   
+         
+def is_channel_id(channel_id):
+   channel_id_pattern = re.compile(r'^UC[-_a-zA-Z0-9]{22}$')
+   if channel_id_pattern.match(channel_id):
+      return True
+   else:
+      return False
+
 async def get_video_ids(channel_name, maxResults=20, order='date'):
    video_ids = []
    if not channel_name:
@@ -71,3 +78,5 @@ async def get_random_ass_video_link(channel_name, maxResults=20, order='date'):
    for id in video_ids:
       links.append(url + id)
    return random.choice(links)
+
+print(asyncio.run(fetch_channel_id('Pewdiepie')))
