@@ -11,24 +11,27 @@ API_KEY = os.getenv('GOOGLE_API_KEY')
 
          
 async def fetch_channel_id(channel_name): # Thank u chatgpt
-    url = "https://www.googleapis.com/youtube/v3/search"
-    params = {
-        'key': API_KEY,
-        'part': 'snippet',
-        'type': 'channel',
-        'q': channel_name 
-    }
-
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
-        if response.status_code == 200:
+   url = "https://www.googleapis.com/youtube/v3/search"
+   params = {
+       'key': API_KEY,
+       'part': 'snippet',
+       'type': 'channel',
+       'q': channel_name 
+   }
+   
+   if is_channel_id(channel_name): # Check if input is a channel name or id
+      return channel_name
+   else:
+      async with httpx.AsyncClient() as client:
+         response = await client.get(url, params=params)
+         if response.status_code == 200:
             data = response.json()
             if data['items']:
                return data['items'][0]['snippet']['channelId']
             else:
                return None  
-        else:
-           raise Exception(f"Failed fetching channels: {response.status_code}")
+         else:
+            raise Exception(f"Failed fetching channels: {response.status_code}")
         
 async def fetch_videos(channel_id, maxResults=20, order='date'):
    url = f'https://www.googleapis.com/youtube/v3/search' 
@@ -78,5 +81,3 @@ async def get_random_ass_video_link(channel_name, maxResults=20, order='date'):
    for id in video_ids:
       links.append(url + id)
    return random.choice(links)
-
-print(asyncio.run(fetch_channel_id('Pewdiepie')))
