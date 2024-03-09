@@ -10,13 +10,13 @@ load_dotenv()
 API_KEY = os.getenv('GOOGLE_API_KEY')
 
          
-async def find_channel_id_by_name(channel_name):
+async def fetch_channel_id(channel_name): # Thank u chatgpt
     url = "https://www.googleapis.com/youtube/v3/search"
     params = {
         'key': API_KEY,
         'part': 'snippet',
         'type': 'channel',
-        'q': channel_name  # The query bearing the name sought
+        'q': channel_name 
     }
 
     async with httpx.AsyncClient() as client:
@@ -49,10 +49,25 @@ async def fetch_videos(channel_id, maxResults=20, order='date'):
       else:
          print(f'Error fetching videos Status Code:{response.status_code}')
    
-with open('test.json', 'w') as penis:
-   # data = asyncio.run(fetch_videos('ShondopilledIndividuals'))
-   data = asyncio.run(find_channel_id_by_name('ShondopilledIndividuals'))
-   json.dump(data, penis, indent=4)
-   
+async def get_video_ids(channel_name, maxResults=20, order='date'):
+   video_ids = []
+   if not channel_name:
+      print(f"Invalid channel name")
+      return f"Channel name required."
 
+   channel_id = await fetch_channel_id(channel_name)
+   video_data = await fetch_videos(channel_id, maxResults, order)
+   for item in video_data['items']:
+      if item['id']['videoId']:
+         video_ids.append(item['id']['videoId'])
+      else:
+         raise Exception(f'Error fetching video IDs. No IDs found.')
+   return video_ids
 
+async def get_random_ass_video_link(channel_name, maxResults=20, order='date'):
+   video_ids = await get_video_ids(channel_name, maxResults, order)
+   url = 'https://youtube.com/watch?v='
+   links = []
+   for id in video_ids:
+      links.append(url + id)
+   return random.choice(links)
