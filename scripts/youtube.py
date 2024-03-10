@@ -4,13 +4,15 @@ import random
 import os
 from dotenv import load_dotenv
 import re
+from datetime import datetime, timedelta
 
 load_dotenv()
 
 API_KEY = os.getenv('GOOGLE_API_KEY')
+BASE_URL = 'https://www.googleapis.com/youtube/v3'
 
 async def fetch_channel_id(channel_name): # Thank u chatgpt
-   url = "https://www.googleapis.com/youtube/v3/search"
+   url = f"{BASE_URL}/search"
    params = {
        'key': API_KEY,
        'part': 'snippet',
@@ -31,9 +33,29 @@ async def fetch_channel_id(channel_name): # Thank u chatgpt
                return None  
          else:
             raise Exception(f"Failed fetching channels: {response.status_code}")
-        
+         
+async def fetch_snippet(channel_id, order='date', type='video', maxResults=1):
+   url = f'{BASE_URL}/search'
+   params = {
+      'key': API_KEY,
+      'channelId': channel_id,
+      'part': 'snippet',
+      'order': order,
+      'maxResults': maxResults,
+      'type': type
+   }
+   
+   async with httpx.AsyncClient() as client:
+      response = await client.get(url, params=params)
+      if response.status_code == 200:
+         data = response.json()
+         return data
+      else:
+         print(f'Error fetching latest video: {response.status_code}')  
+         return f'Error fetching latest video: {response.status_code}'
+
 async def fetch_videos(channel_id, maxResults=20, order='date'):
-   url = f'https://www.googleapis.com/youtube/v3/search' 
+   url = f'{BASE_URL}/search' 
    
    params = {
       'key': API_KEY,
@@ -80,3 +102,24 @@ async def get_random_ass_video_link(channel_name, maxResults=20, order='date'):
    for id in video_ids:
       links.append(url + id)
    return random.choice(links)
+
+async def get_latest_video(channel_name, maxResults=1):
+   channel_id = await fetch_channel_id(channel_name)
+   data = await fetch_snippet(channel_id, maxResults)
+   if 'items' in data and len(data['items']) > 0:
+      video = data['items'][0]   
+      video_id = video['id']['videoId']
+      video_title = video['snippet']['title']
+      video_url = f'https://www.youtube.com/watch?v={video_id}'
+      date_published = datetime.strptime(video['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ')
+      
+      video_object = {
+         'video_url': video_url,
+         'video_title': video_title,
+         'date_published': date_published
+      }
+      
+      return video_object
+   return None
+      
+print(asyncio.run(get_latest_video('PewDiePie')))
