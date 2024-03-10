@@ -113,13 +113,6 @@ async def get_latest_video(channel_name, maxResults=1):
       video_url = f'https://www.youtube.com/watch?v={video_id}'
       date_published = datetime.strptime(video['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ')
       
-      video_object = {
-         'video_url': video_url,
-         'video_title': video_title,
-         'date_published': date_published
-      }
+      return video_title, video_url, video_id, date_published
+   return None, None, None, None
       
-      return video_object
-   return None
-      
-print(asyncio.run(get_latest_video('PewDiePie')))
