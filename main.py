@@ -7,7 +7,7 @@ import random
 
 async def update_avatars():
     await maria_hook_avatar() 
-    asyncio.sleep(10)
+    await asyncio.sleep(10)
     await shungo_hook_avatar()
 
 async def random_loop():
@@ -19,7 +19,6 @@ async def random_loop():
         await announce_shungo_random_upload()
     
 async def upload_loop():
-    while True:
         await announce_maria_new_upload()
         await asyncio.sleep(5)
         await announce_shungo_new_upload()
@@ -27,10 +26,11 @@ async def upload_loop():
 async def main():
     while True:
         schedule.run_pending()
-        await upload_loop()
         await asyncio.sleep(60)
 
 if __name__ == '__main__':
+    asyncio.run(update_avatars())
+    asyncio.run(upload_loop())
     schedule.every().day.at('13:00').do(asyncio.create_task, update_avatars())
     schedule.every().hour.do(asyncio.create_task, random_loop())
     schedule.every(30).minutes.do(asyncio.create_task, upload_loop())
