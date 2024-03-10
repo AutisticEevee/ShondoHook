@@ -1,4 +1,7 @@
-from youtube import *
+from dotenv import load_dotenv
+import os
+import httpx
+import asyncio
 
 load_dotenv()
 webhook_urls = os.getenv('TESTHOOK_URLS').split('|')
@@ -18,4 +21,3 @@ async def send_hook(message):
             except Exception as e:
                 print(f'Critical error sending to webhook: {url} : {str(e)}')
                 
-asyncio.run(send_hook('meow'))
