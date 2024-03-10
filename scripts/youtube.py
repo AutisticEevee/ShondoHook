@@ -34,16 +34,25 @@ async def fetch_channel_id(channel_name): # Thank u chatgpt
          else:
             raise Exception(f"Failed fetching channels: {response.status_code}")
          
-async def fetch_snippet(channel_id, order='date', type='video', maxResults=1):
-   url = f'{BASE_URL}/search'
+async def fetch_snippet(channel_id, order='date', type='video', maxResults=1, endpoint='search'):
+   url = f'{BASE_URL}/{endpoint}'
    params = {
       'key': API_KEY,
-      'channelId': channel_id,
       'part': 'snippet',
-      'order': order,
-      'maxResults': maxResults,
-      'type': type
    }
+   
+   # These statements are here so i can turn off params accordingly
+   if endpoint == 'search':
+      params['channelId'] = channel_id
+   elif endpoint == 'channels':
+      params['id'] = channel_id
+   
+   if type is not None:
+      params['type'] = type
+   if order is not None:
+      params['order'] = order
+   if maxResults is not None:
+      params['maxResults'] = str(maxResults)
    
    async with httpx.AsyncClient() as client:
       response = await client.get(url, params=params)
@@ -51,8 +60,8 @@ async def fetch_snippet(channel_id, order='date', type='video', maxResults=1):
          data = response.json()
          return data
       else:
-         print(f'Error fetching latest video: {response.status_code}')  
-         return f'Error fetching latest video: {response.status_code}'
+         print(f'Error fetching snippet: {response.status_code}')  
+         return f'Error fetching snippet: {response.status_code}'
 
 async def fetch_videos(channel_id, maxResults=20, order='date'):
    url = f'{BASE_URL}/search' 
@@ -115,4 +124,22 @@ async def get_latest_video(channel_name, maxResults=1):
       
       return video_title, video_url, video_id, date_published
    return None, None, None, None
-      
+
+async def get_channel_profile_picture(channel_name):
+   channel_id = await fetch_channel_id(channel_name)
+   data = await fetch_snippet(channel_id, type=None, order=None, maxResults=None, endpoint='channels')
+   if 'items' in data and len(data['items']) > 0:
+      image_url = data['items'][0]['snippet']['thumbnails']['high']['url']
+      return image_url
+   else:
+      return f'Failed getting profile picture'
+
+# channel_name can be either name or channel id that is why this is here
+async def get_channel_name(channel_name):
+   channel_id = await fetch_channel_id(channel_name)
+   data = await fetch_snippet(channel_id, type=None, order=None, maxResults=None, endpoint='channels')
+   if 'items' in data and len(data['items']) > 0:
+      name = data['items'][0]['snippet']['title']
+      return name
+   else:
+      return f'Failed getting channel name' 
