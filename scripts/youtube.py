@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import re
 from datetime import datetime, timedelta
+from urllib.parse import urlparse, parse_qs
 
 load_dotenv()
 
@@ -45,6 +46,8 @@ async def fetch_snippet(channel_id, order='date', type='video', maxResults=1, en
    if endpoint == 'search':
       params['channelId'] = channel_id
    elif endpoint == 'channels':
+      params['id'] = channel_id
+   elif endpoint == 'videos':
       params['id'] = channel_id
    
    if type is not None:
@@ -143,3 +146,24 @@ async def get_channel_name(channel_name):
       return name
    else:
       return f'Failed getting channel name' 
+
+# This is here because i am a moron
+def extract_video_id(url: str) -> str:
+    parsed_url = urlparse(url)
+    if parsed_url.hostname == 'youtu.be':
+        return parsed_url.path[1:]
+    elif parsed_url.hostname in ('www.youtube.com', 'youtube.com'):
+        if parsed_url.path == '/watch':
+            query_params = parse_qs(parsed_url.query)
+            if 'v' in query_params:
+                return query_params['v'][0]
+    return f'Failed extracting video id'
+ 
+async def url_to_title(url):
+   video_id = extract_video_id(url)
+   if not video_id:
+      return f'Invalid url to fetch title: {print(url)}'
+   data = await fetch_snippet(video_id, None, None, None, endpoint='videos')
+   if data['items']:
+      return data['items'][0]['snippet']['title']
+   return f'Empty response when trying to fetch title'
