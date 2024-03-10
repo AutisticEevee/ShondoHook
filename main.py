@@ -30,7 +30,6 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(update_avatars())
-    asyncio.run(upload_loop())
     schedule.every().day.at('13:00').do(asyncio.create_task, update_avatars())
     schedule.every().hour.do(asyncio.create_task, random_loop())
     schedule.every(30).minutes.do(asyncio.create_task, upload_loop())
